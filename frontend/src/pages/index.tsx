@@ -1,8 +1,34 @@
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 import Head from "next/head";
 import { useState } from "react";
 
 export default function Home() {
   const [news, setNews] = useState("");
+  const [isLoading, setIsloading] = useState<boolean>(false);
+  const [score, setScore] = useState<number>(0);
+
+  const fetchPrediction = async () => {
+    try {
+      setIsloading(true);
+      if (news.length > 0) {
+        const { data } = await axios.get(
+          `http://localhost:5000/predict?q=${news}`
+        );
+        console.log(data);
+        setScore(data.score);
+        return;
+      }
+      setScore(0);
+    } catch (err) {
+      console.log(err);
+      alert("Error occured");
+    } finally {
+      setIsloading(false);
+    }
+  };
+
+  console.log({ score });
 
   return (
     <>
@@ -27,12 +53,19 @@ export default function Home() {
           }}
         ></textarea>
         <span className="flex flex-row space-x-3 mt-4 items-center">
-          <button className="btn btn-info">
-            Predict using Naive bayes model
+          <button
+            className="btn btn-info"
+            onClick={fetchPrediction}
+            disabled={isLoading}
+          >
+            {isLoading ? "Loading..." : "Predict using Naive bayes model"}
           </button>
-          <p>or</p>
-          <button className="btn btn-success">Predict using BARF model</button>
         </span>
+        <p className="p-5 text-5xl">
+          {score > 1 && "😃"}
+          {score < 0 && "☹️"}
+          {score === 0 && "😶"}
+        </p>
       </main>
     </>
   );
